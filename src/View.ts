@@ -1,4 +1,8 @@
-﻿class View extends Sprite{
+﻿/**
+ * ...
+ * @author lizhi
+ */
+class View extends Sprite{
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     mouseX: number = 0;

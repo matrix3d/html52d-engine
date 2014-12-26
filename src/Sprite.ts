@@ -1,6 +1,11 @@
-﻿class Sprite {
+﻿/**
+ * ...
+ * @author lizhi
+ */
+class Sprite {
     children: Array<Sprite> = [];
     graphics: Graphics=new Graphics();
+	alpha:number=1;
     x: number=0;
     y: number=0;
     scaleX: number=1;
@@ -8,6 +13,7 @@
     rotation: number = 0;
     parent: Sprite;
     constructor() {
+		this.graphics.sprite=this;
     }
 
     addChild(s: Sprite) {

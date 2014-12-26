@@ -1,20 +1,53 @@
-﻿var __extends = this.__extends || function (d, b) {
+﻿/**
+* ...
+* @author lizhi
+*/
+var BitmapData = (function () {
+    function BitmapData(src) {
+        this.image = new Image();
+        this.image.src = src;
+    }
+    return BitmapData;
+})();
+var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
+/**
+* ...
+* @author lizhi
+*/
 var Graphics = (function () {
     function Graphics() {
         this.cmds = [];
     }
-    //beginBitmapFill(bitmap: BitmapData, matrix: Matrix= null, repeat: Boolean= true, smooth: Boolean= false): void;/
-    Graphics.prototype.beginFill = function (color) {
-        this.cmds.push(new SetAttribCmd("fillStyle", color));
+    Graphics.prototype.beginBitmapFill = function (bitmap /*, matrix: Matrix= null, repeat: Boolean= true, smooth: Boolean= false*/ ) {
+        this.cmds.push(new Cmd(Graphics.ctx.drawImage, [bitmap.image, 0, 0]), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true));
+    };
+    Graphics.prototype.beginFill = function (color, alpha) {
+        if (typeof alpha === "undefined") { alpha = 1; }
+        this.cmds.push(new SetColorAttribCmd(Graphics.ctx, "fillStyle", color, alpha, this.sprite), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true));
+    };
+    Graphics.prototype.endFill = function () {
+        this.cmds.push(new Cmd(Graphics.ctx.closePath, null), new SetAttribCmd(this, "filling", false));
+        if (this.filling) {
+            this.cmds.push(new Cmd(Graphics.ctx.fill, null));
+        }
+    };
+    Graphics.prototype.lineStyle = function (thickness, color, alpha) {
+        if (typeof alpha === "undefined") { alpha = 1; }
+        if (this.lineing)
+            this.cmds.push(new Cmd(Graphics.ctx.stroke, null));
+        this.cmds.push(new SetAttribCmd(Graphics.ctx, "lineWidth", thickness), new SetColorAttribCmd(Graphics.ctx, "strokeStyle", color, alpha, this.sprite), new SetAttribCmd(this, "lineing", thickness != undefined));
     };
 
     //public function beginGradientFill(type: String, colors: Array, alphas: Array, ratios: Array, matrix: Matrix= null, spreadMethod: String= "pad", interpolationMethod: String= "rgb", focalPointRatio: Number= 0): void;
     Graphics.prototype.clear = function () {
+        this.filling = false;
+        this.lineing = false;
+        this.cmds = [];
     };
     Graphics.prototype.copyFrom = function (sourceGraphics) {
         this.cmds = sourceGraphics.cmds.concat();
@@ -27,35 +60,32 @@ var Graphics = (function () {
 
     //public function drawEllipse(x: Number, y: Number, width: Number, height: Number): void;
     Graphics.prototype.drawRect = function (x, y, width, height) {
-        this.cmds.push(new Cmd(Graphics.ctx.fillRect, [x, y, width, height]), new Cmd(Graphics.ctx.strokeRect, [x, y, width, height]));
+        if (this.filling)
+            this.cmds.push(new Cmd(Graphics.ctx.fillRect, [x, y, width, height]));
+        if (this.lineing)
+            this.cmds.push(new Cmd(Graphics.ctx.strokeRect, [x, y, width, height]));
     };
 
     //public function drawRoundRect(x: Number, y: Number, width: Number, height: Number, ellipseWidth: Number, ellipseHeight: Number= null): void;
-    Graphics.prototype.endFill = function () {
-        this.cmds.push(new Cmd(Graphics.ctx.closePath, null), new Cmd(Graphics.ctx.fill, null));
-        this.beginFill("#000");
-    };
-    Graphics.prototype.lineStyle = function (thickness, color) {
-        this.cmds.push(new SetAttribCmd("lineWidth", thickness), new SetAttribCmd("strokeStyle", color));
-    };
     Graphics.prototype.lineTo = function (x, y) {
         this.cmds.push(new Cmd(Graphics.ctx.lineTo, [x, y]));
     };
 
     Graphics.prototype.moveTo = function (x, y) {
-        this.cmds.push(new Cmd(Graphics.ctx.beginPath, null), new Cmd(Graphics.ctx.moveTo, [x, y]));
+        this.cmds.push(new Cmd(Graphics.ctx.moveTo, [x, y]));
     };
 
     Graphics.prototype.update = function () {
-        Graphics.ctx.fillStyle = "#000";
-        Graphics.ctx.strokeStyle = "#000";
-        Graphics.ctx.beginPath();
+        this.lineing = false;
+        this.filling = false;
         for (var key in this.cmds) {
             this.cmds[key].update();
         }
         Graphics.ctx.closePath();
-        Graphics.ctx.fill();
-        Graphics.ctx.stroke();
+        if (this.filling)
+            Graphics.ctx.fill();
+        if (this.lineing)
+            Graphics.ctx.stroke();
     };
     return Graphics;
 })();
@@ -73,25 +103,48 @@ var Cmd = (function () {
 
 var SetAttribCmd = (function (_super) {
     __extends(SetAttribCmd, _super);
-    function SetAttribCmd(name, value) {
+    function SetAttribCmd(target, name, value) {
         _super.call(this, null, null);
+        this.target = target;
         this.name = name;
         this.value = value;
+        this.update();
     }
     SetAttribCmd.prototype.update = function () {
-        Graphics.ctx[this.name] = this.value;
+        this.target[this.name] = this.value;
     };
     return SetAttribCmd;
 })(Cmd);
+
+var SetColorAttribCmd = (function (_super) {
+    __extends(SetColorAttribCmd, _super);
+    function SetColorAttribCmd(target, name, color, alpha, sprite) {
+        this.color = color;
+        this.alpha = alpha;
+        this.sprite = sprite;
+        _super.call(this, target, name, null);
+    }
+    SetColorAttribCmd.prototype.update = function () {
+        this.value = "rgba(" + (this.color >> 16 & 0xff) + "," + (this.color >> 8 & 0xff) + "," + (this.color & 0xff) + "," + this.alpha * this.sprite.alpha + ")";
+        _super.prototype.update.call(this);
+    };
+    return SetColorAttribCmd;
+})(SetAttribCmd);
+/**
+* ...
+* @author lizhi
+*/
 var Sprite = (function () {
     function Sprite() {
         this.children = [];
         this.graphics = new Graphics();
+        this.alpha = 1;
         this.x = 0;
         this.y = 0;
         this.scaleX = 1;
         this.scaleY = 1;
         this.rotation = 0;
+        this.graphics.sprite = this;
     }
     Sprite.prototype.addChild = function (s) {
         s.parent = this;
@@ -114,6 +167,10 @@ var Sprite = (function () {
     };
     return Sprite;
 })();
+/**
+* ...
+* @author lizhi
+*/
 var View = (function (_super) {
     __extends(View, _super);
     function View(canvas) {
@@ -164,6 +221,9 @@ var App = (function () {
         var canvas = document.getElementById("canvas1");
 
         this.view = new View(canvas);
+
+        var s = new Sprite();
+        this.view.addChild(s);
     }
     App.prototype.start = function () {
         var _this = this;
@@ -175,7 +235,7 @@ var App = (function () {
     App.prototype.update = function () {
         var c = 1;
         while (c-- > 0) {
-            var s = new Shape3D(Math.random() * 1000, "#000");
+            var s = new Shape3D(Math.random() * 1000, 0x000);
             this.view.addChild(s);
             s.x = this.view.mouseX;
             s.y = this.view.mouseY;
@@ -210,8 +270,9 @@ var Shape3D = (function (_super) {
         this.power = 100 + 50 * Math.random();
         this.rSpeed = Math.random() / 300;
         this.id = id;
-
         this.graphics.beginFill(color);
+
+        //this.graphics.beginBitmapFill(new BitmapData("1.jpg"));
         var j = Math.floor(16 * Math.random() / 2) * 2;
         var r = 10;
         var minRP = .5;
@@ -249,8 +310,7 @@ var Shape3D = (function (_super) {
         this.scaleX = Math.sin(ft);
         this.scaleY = Math.cos(ft);
         this.power--;
-
-        //alpha = power / 100;
+        this.alpha = this.power / 150;
         this.vy += .1;
         this.vx *= .95;
         this.vy *= .95;

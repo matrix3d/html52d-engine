@@ -10,9 +10,7 @@ class Main
 		var app = new App();
 		app.start();
 	}
-	
 }
-
 
 class App {
     view: View;
@@ -22,6 +20,9 @@ class App {
         var canvas =<HTMLCanvasElement> document.getElementById("canvas1");
 
         this.view = new View(canvas);
+		
+		var s = new Sprite();
+		this.view.addChild(s);
     }
 
     start() {
@@ -31,7 +32,7 @@ class App {
     update() {
         var c = 1;
         while (c-- > 0) {
-            var s = new Shape3D(Math.random() * 1000, "#000");
+            var s = new Shape3D(Math.random() * 1000, 0x000);
             this.view.addChild(s);
             s.x = this.view.mouseX;
             s.y = this.view.mouseY;
@@ -65,12 +66,12 @@ class Shape3D extends Sprite {
     vx: number;
     vy: number;
     rSpeed: number = Math.random() / 300;
-    constructor(id: number, color: any) 
+    constructor(id: number, color: number) 
     {
         super();
         this.id = id;
-
         this.graphics.beginFill(color);
+		//this.graphics.beginBitmapFill(new BitmapData("1.jpg"));
         var j = Math.floor( 16 * Math.random()/2)*2;
         var r = 10;
         var minRP = .5;
@@ -108,7 +109,7 @@ class Shape3D extends Sprite {
         this.scaleX = Math.sin(ft);
         this.scaleY = Math.cos(ft);
         this.power--;
-        //alpha = power / 100;
+        this.alpha = this.power / 150;
         this.vy += .1;
         this.vx *= .95;
         this.vy *= .95;
