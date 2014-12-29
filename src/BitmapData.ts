@@ -2,11 +2,13 @@
  * ...
  * @author lizhi
  */
- class BitmapData{
-	 image:HTMLImageElement;
-    constructor(src:string) {
-		this.image=new Image();
-		this.image.src=src;
-    }
-}
+// module display{
+	class BitmapData{
+		 image:HTMLImageElement;
+		constructor(src:string) {
+			this.image=new Image();
+			this.image.src=src;
+		}
+	}
+//}
 

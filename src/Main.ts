@@ -9,6 +9,7 @@ class Main
 	{
 		var app = new App();
 		app.start();
+		
 	}
 }
 
@@ -20,17 +21,28 @@ class App {
         var canvas =<HTMLCanvasElement> document.getElementById("canvas1");
 
         this.view = new View(canvas);
+		var c =100;
+		while(c-->0){
+			var ss = new Sprite();
+			var ssc=new SpriteSheetCtrl(ss,new BitmapData("rockman.png"),500,350,10,7,Math.random()/3);
+			ssc.frame=100*Math.random();
+			ss.ctrls.push(ssc);
+			ss.x=Math.floor(Math.random()*400);
+			ss.y=Math.floor(Math.random()*400);
+			this.view.addChild(ss);
+		}
 		
 		var s = new Sprite();
 		this.view.addChild(s);
+		this.view.canvas.addEventListener("mousemove", (e:MouseEvent) => this.mouseMoveHander(e));
     }
 
     start() {
         this.timerToken = setInterval(() => this.update(), 1000/24);
     }
 
-    update() {
-        var c = 1;
+	mouseMoveHander(e){
+		 var c = 3;
         while (c-- > 0) {
             var s = new Shape3D(Math.random() * 1000, 0x000);
             this.view.addChild(s);
@@ -38,7 +50,8 @@ class App {
             s.y = this.view.mouseY;
             this.shapes.push(s);
         }
-
+	}
+    update() {
         var d = new Date();
         var t = d.getTime();
         for (var i = this.shapes.length - 1; i >= 0; i--) {

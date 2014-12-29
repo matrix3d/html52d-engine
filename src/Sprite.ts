@@ -4,6 +4,7 @@
  */
 class Sprite {
     children: Array<Sprite> = [];
+	ctrls:Array<Ctrl>=[];
     graphics: Graphics=new Graphics();
 	alpha:number=1;
     x: number=0;
@@ -29,6 +30,10 @@ class Sprite {
     }
 
     update(v: View) {
+		for(var key in this.ctrls){
+			this.ctrls[key].update();
+		}
+		
         v.ctx.setTransform(1, 0, 0, 1, 0, 0);
         v.ctx.translate(this.x, this.y);
         v.ctx.rotate(this.rotation*Math.PI/180);

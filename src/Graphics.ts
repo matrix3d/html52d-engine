@@ -8,14 +8,15 @@ class Graphics {
 	lineing:boolean;
     cmds: Array<Cmd> = [];
 	sprite:Sprite;
-    beginBitmapFill(bitmap: BitmapData/*, matrix: Matrix= null, repeat: Boolean= true, smooth: Boolean= false*/): void{
+    drawImage(bitmap: BitmapData,sx:number=0,sy:number=0,swidth:number=0,sheight:number=0,x:number=0,y:number=0,width:number=0,height:number=0): void{
 		 this.cmds.push(
-			new Cmd(Graphics.ctx.drawImage, [bitmap.image,0,0]),
-			new Cmd(Graphics.ctx.beginPath, null),
-			new SetAttribCmd(this,"filling", true)
+			swidth==0?
+			new Cmd(Graphics.ctx.drawImage, [bitmap.image,sx,sy])
+			:
+			new Cmd(Graphics.ctx.drawImage, [bitmap.image,sx,sy,swidth,sheight,x,y,width,height])
 		);
 	}
-    beginFill(color: number,alpha:number=1) {
+    beginFill(color: number=0,alpha:number=1) {
         this.cmds.push(
 			new SetColorAttribCmd(Graphics.ctx,"fillStyle", color,alpha,this.sprite),
 			new Cmd(Graphics.ctx.beginPath, null),
@@ -31,7 +32,7 @@ class Graphics {
 			this.cmds.push(new Cmd(Graphics.ctx.fill, null));
 		}
     }
-    lineStyle(thickness: number, color: number,alpha:number=1): void {
+    lineStyle(thickness: number, color: number=0,alpha:number=1): void {
 		if(this.lineing)this.cmds.push(new Cmd(Graphics.ctx.stroke,null));
         this.cmds.push(
             new SetAttribCmd(Graphics.ctx,"lineWidth", thickness),
@@ -48,8 +49,7 @@ class Graphics {
     copyFrom(sourceGraphics: Graphics): void{
         this.cmds = sourceGraphics.cmds.concat();   
     }
-    //public function cubicCurveTo(controlX1: Number, controlY1: Number, controlX2: Number, controlY2: Number, anchorX: Number, anchorY: Number): void;/
-    drawCircle(x: number, y: number, radius: number): void{
+	drawCircle(x: number, y: number, radius: number): void{
         this.cmds.push(
             new Cmd(Graphics.ctx.beginPath,null),
             new Cmd(Graphics.ctx.arc, [x, y, radius, 0, Math.PI * 2]),
@@ -73,6 +73,17 @@ class Graphics {
         this.cmds.push(
             new Cmd(Graphics.ctx.moveTo, [x, y])
             );
+    }
+	
+	curveTo(controlX:Number, controlY:Number, anchorX:Number, anchorY:Number): void {
+        this.cmds.push(
+            new Cmd(Graphics.ctx.quadraticCurveTo, [controlX,controlY, anchorX,anchorY])
+        );
+    }
+	cubicCurveTo(controlX1: Number, controlY1: Number, controlX2: Number, controlY2: Number, anchorX: Number, anchorY: Number): void {
+        this.cmds.push(
+            new Cmd(Graphics.ctx.bezierCurveTo, [controlX1, controlY1,controlX2,controlY2,anchorX,anchorY])
+        );
     }
 
     update() {

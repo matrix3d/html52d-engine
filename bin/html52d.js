@@ -2,6 +2,7 @@
 * ...
 * @author lizhi
 */
+// module display{
 var BitmapData = (function () {
     function BitmapData(src) {
         this.image = new Image();
@@ -9,6 +10,7 @@ var BitmapData = (function () {
     }
     return BitmapData;
 })();
+//}
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -23,10 +25,19 @@ var Graphics = (function () {
     function Graphics() {
         this.cmds = [];
     }
-    Graphics.prototype.beginBitmapFill = function (bitmap /*, matrix: Matrix= null, repeat: Boolean= true, smooth: Boolean= false*/ ) {
-        this.cmds.push(new Cmd(Graphics.ctx.drawImage, [bitmap.image, 0, 0]), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true));
+    Graphics.prototype.drawImage = function (bitmap, sx, sy, swidth, sheight, x, y, width, height) {
+        if (typeof sx === "undefined") { sx = 0; }
+        if (typeof sy === "undefined") { sy = 0; }
+        if (typeof swidth === "undefined") { swidth = 0; }
+        if (typeof sheight === "undefined") { sheight = 0; }
+        if (typeof x === "undefined") { x = 0; }
+        if (typeof y === "undefined") { y = 0; }
+        if (typeof width === "undefined") { width = 0; }
+        if (typeof height === "undefined") { height = 0; }
+        this.cmds.push(swidth == 0 ? new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy]) : new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy, swidth, sheight, x, y, width, height]));
     };
     Graphics.prototype.beginFill = function (color, alpha) {
+        if (typeof color === "undefined") { color = 0; }
         if (typeof alpha === "undefined") { alpha = 1; }
         this.cmds.push(new SetColorAttribCmd(Graphics.ctx, "fillStyle", color, alpha, this.sprite), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true));
     };
@@ -37,6 +48,7 @@ var Graphics = (function () {
         }
     };
     Graphics.prototype.lineStyle = function (thickness, color, alpha) {
+        if (typeof color === "undefined") { color = 0; }
         if (typeof alpha === "undefined") { alpha = 1; }
         if (this.lineing)
             this.cmds.push(new Cmd(Graphics.ctx.stroke, null));
@@ -52,8 +64,6 @@ var Graphics = (function () {
     Graphics.prototype.copyFrom = function (sourceGraphics) {
         this.cmds = sourceGraphics.cmds.concat();
     };
-
-    //public function cubicCurveTo(controlX1: Number, controlY1: Number, controlX2: Number, controlY2: Number, anchorX: Number, anchorY: Number): void;/
     Graphics.prototype.drawCircle = function (x, y, radius) {
         this.cmds.push(new Cmd(Graphics.ctx.beginPath, null), new Cmd(Graphics.ctx.arc, [x, y, radius, 0, Math.PI * 2]), new Cmd(Graphics.ctx.closePath, null), new Cmd(Graphics.ctx.fill, null));
     };
@@ -73,6 +83,13 @@ var Graphics = (function () {
 
     Graphics.prototype.moveTo = function (x, y) {
         this.cmds.push(new Cmd(Graphics.ctx.moveTo, [x, y]));
+    };
+
+    Graphics.prototype.curveTo = function (controlX, controlY, anchorX, anchorY) {
+        this.cmds.push(new Cmd(Graphics.ctx.quadraticCurveTo, [controlX, controlY, anchorX, anchorY]));
+    };
+    Graphics.prototype.cubicCurveTo = function (controlX1, controlY1, controlX2, controlY2, anchorX, anchorY) {
+        this.cmds.push(new Cmd(Graphics.ctx.bezierCurveTo, [controlX1, controlY1, controlX2, controlY2, anchorX, anchorY]));
     };
 
     Graphics.prototype.update = function () {
@@ -137,6 +154,7 @@ var SetColorAttribCmd = (function (_super) {
 var Sprite = (function () {
     function Sprite() {
         this.children = [];
+        this.ctrls = [];
         this.graphics = new Graphics();
         this.alpha = 1;
         this.x = 0;
@@ -159,6 +177,10 @@ var Sprite = (function () {
     };
 
     Sprite.prototype.update = function (v) {
+        for (var key in this.ctrls) {
+            this.ctrls[key].update();
+        }
+
         v.ctx.setTransform(1, 0, 0, 1, 0, 0);
         v.ctx.translate(this.x, this.y);
         v.ctx.rotate(this.rotation * Math.PI / 180);
@@ -205,6 +227,51 @@ var View = (function (_super) {
 * ...
 * @author lizhi
 */
+var Ctrl = (function () {
+    function Ctrl() {
+    }
+    Ctrl.prototype.update = function () {
+    };
+    return Ctrl;
+})();
+/**
+* ...
+* @author lizhi
+*/
+var SpriteSheetCtrl = (function (_super) {
+    __extends(SpriteSheetCtrl, _super);
+    function SpriteSheetCtrl(target, image, imageWidth, imageHeight, numCols, numRows, fps, centerX, centerY) {
+        if (typeof fps === "undefined") { fps = 1; }
+        if (typeof centerX === "undefined") { centerX = 0; }
+        if (typeof centerY === "undefined") { centerY = 0; }
+        _super.call(this);
+        this.frame = 0;
+        this.target = target;
+        this.image = image;
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        this.numCols = numCols;
+        this.numRows = numRows;
+        this.centerX = centerX;
+        this.centerY = centerY;
+        this.fps = fps;
+    }
+    SpriteSheetCtrl.prototype.update = function () {
+        this.target.graphics.clear();
+        this.frame += this.fps;
+        var f = Math.floor(this.frame) % (this.numCols * this.numRows);
+        var ox = f % this.numCols;
+        var oy = Math.floor(f / this.numCols);
+        var sw = this.imageWidth / this.numCols;
+        var sh = this.imageHeight / this.numRows;
+        this.target.graphics.drawImage(this.image, sw * ox, sh * oy, sw, sh, -this.centerX, -this.centerY, sw, sh);
+    };
+    return SpriteSheetCtrl;
+})(Ctrl);
+/**
+* ...
+* @author lizhi
+*/
 var Main = (function () {
     function Main() {
     }
@@ -217,13 +284,27 @@ var Main = (function () {
 
 var App = (function () {
     function App() {
+        var _this = this;
         this.shapes = [];
         var canvas = document.getElementById("canvas1");
 
         this.view = new View(canvas);
+        var c = 100;
+        while (c-- > 0) {
+            var ss = new Sprite();
+            var ssc = new SpriteSheetCtrl(ss, new BitmapData("rockman.png"), 500, 350, 10, 7, Math.random() / 3);
+            ssc.frame = 100 * Math.random();
+            ss.ctrls.push(ssc);
+            ss.x = Math.floor(Math.random() * 400);
+            ss.y = Math.floor(Math.random() * 400);
+            this.view.addChild(ss);
+        }
 
         var s = new Sprite();
         this.view.addChild(s);
+        this.view.canvas.addEventListener("mousemove", function (e) {
+            return _this.mouseMoveHander(e);
+        });
     }
     App.prototype.start = function () {
         var _this = this;
@@ -232,8 +313,8 @@ var App = (function () {
         }, 1000 / 24);
     };
 
-    App.prototype.update = function () {
-        var c = 1;
+    App.prototype.mouseMoveHander = function (e) {
+        var c = 3;
         while (c-- > 0) {
             var s = new Shape3D(Math.random() * 1000, 0x000);
             this.view.addChild(s);
@@ -241,7 +322,8 @@ var App = (function () {
             s.y = this.view.mouseY;
             this.shapes.push(s);
         }
-
+    };
+    App.prototype.update = function () {
         var d = new Date();
         var t = d.getTime();
         for (var i = this.shapes.length - 1; i >= 0; i--) {

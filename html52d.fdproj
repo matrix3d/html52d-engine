@@ -26,7 +26,7 @@
     <hidden path="obj" />
   </hiddenPaths>
   <!-- Executed before build -->
-  <preBuildCommand>"%APPDATA%\npm\tsc.cmd" --out "bin/html52d.js" "src/BitmapData.ts" "src/Graphics.ts" "src/Sprite.ts" "src/View.ts" "src/Main.ts"</preBuildCommand>
+  <preBuildCommand>"%APPDATA%\npm\tsc.cmd" --out "bin/html52d.js"  "src/BitmapData.ts" "src/Graphics.ts" "src/Sprite.ts" "src/View.ts" "src/Ctrl.ts" "src/SpriteSheetCtrl.ts" "src/Main.ts"</preBuildCommand>
   <!-- Executed after build -->
   <postBuildCommand alwaysRun="False" />
   <!-- Other project options -->
