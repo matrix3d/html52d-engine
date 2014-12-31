@@ -238,15 +238,12 @@ var Ctrl = (function () {
 * ...
 * @author lizhi
 */
-var SpriteSheetCtrl = (function (_super) {
-    __extends(SpriteSheetCtrl, _super);
-    function SpriteSheetCtrl(target, image, imageWidth, imageHeight, numCols, numRows, fps, centerX, centerY) {
-        if (typeof fps === "undefined") { fps = 1; }
+var SpriteSheet = (function () {
+    function SpriteSheet(image, imageWidth, imageHeight, numCols, numRows, centerX, centerY) {
         if (typeof centerX === "undefined") { centerX = 0; }
         if (typeof centerY === "undefined") { centerY = 0; }
-        _super.call(this);
-        this.frame = 0;
-        this.target = target;
+        this.animations = {};
+        this.animationNames = [];
         this.image = image;
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
@@ -254,17 +251,51 @@ var SpriteSheetCtrl = (function (_super) {
         this.numRows = numRows;
         this.centerX = centerX;
         this.centerY = centerY;
-        this.fps = fps;
     }
-    SpriteSheetCtrl.prototype.update = function () {
-        this.target.graphics.clear();
-        this.frame += this.fps;
-        var f = Math.floor(this.frame) % (this.numCols * this.numRows);
+    SpriteSheet.prototype.update = function (target, frame, currentAnimationName) {
+        target.graphics.clear();
+        var frames = this.animations[currentAnimationName];
+        if (frames) {
+            var f = frames[Math.floor(frame) % frames.length];
+        } else {
+            var f = Math.floor(frame) % (this.numCols * this.numRows);
+        }
+
         var ox = f % this.numCols;
         var oy = Math.floor(f / this.numCols);
         var sw = this.imageWidth / this.numCols;
         var sh = this.imageHeight / this.numRows;
-        this.target.graphics.drawImage(this.image, sw * ox, sh * oy, sw, sh, -this.centerX, -this.centerY, sw, sh);
+        target.graphics.drawImage(this.image, sw * ox, sh * oy, sw, sh, -this.centerX, -this.centerY, sw, sh);
+    };
+    SpriteSheet.prototype.addAnimation = function (name, frames) {
+        this.animations[name] = frames;
+        this.animationNames.push(name);
+    };
+    return SpriteSheet;
+})();
+/**
+* ...
+* @author lizhi
+*/
+var SpriteSheetCtrl = (function (_super) {
+    __extends(SpriteSheetCtrl, _super);
+    function SpriteSheetCtrl(target, sheet, fps) {
+        if (typeof fps === "undefined") { fps = 1; }
+        _super.call(this);
+        this.frame = 0;
+        this.target = target;
+        this.sheet = sheet;
+        this.fps = fps;
+    }
+    SpriteSheetCtrl.prototype.update = function () {
+        this.frame += this.fps;
+        this.sheet.update(this.target, this.frame, this.currentAnimationName);
+    };
+
+    SpriteSheetCtrl.prototype.play = function (name, frame) {
+        if (typeof frame === "undefined") { frame = 0; }
+        this.currentAnimationName = name;
+        this.frame = frame;
     };
     return SpriteSheetCtrl;
 })(Ctrl);
@@ -289,16 +320,26 @@ var App = (function () {
         var canvas = document.getElementById("canvas1");
 
         this.view = new View(canvas);
+        var sheet = new SpriteSheet(new BitmapData("rockman.png"), 500, 350, 10, 7, 500 / 10 / 2);
+        sheet.addAnimation("run", [3, 4, 5]);
+        sheet.addAnimation("stand", [0, 1, 2]);
+        sheet.addAnimation("attack1", [42, 43, 44, 45]);
         var c = 100;
         while (c-- > 0) {
             var ss = new Sprite();
-            var ssc = new SpriteSheetCtrl(ss, new BitmapData("rockman.png"), 500, 350, 10, 7, Math.random() / 3);
+            if (Math.random() < .5)
+                ss.scaleX = -1;
+            var ssc = new SpriteSheetCtrl(ss, sheet, Math.random() / 3);
+            ssc.play(sheet.animationNames[Math.floor(sheet.animationNames.length * Math.random())], Math.random() * 100);
             ssc.frame = 100 * Math.random();
             ss.ctrls.push(ssc);
             ss.x = Math.floor(Math.random() * 400);
             ss.y = Math.floor(Math.random() * 400);
             this.view.addChild(ss);
         }
+        this.view.children.sort(function (n1, n2) {
+            return n1.y - n2.y;
+        });
 
         var s = new Sprite();
         this.view.addChild(s);

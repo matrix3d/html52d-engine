@@ -21,16 +21,24 @@ class App {
         var canvas =<HTMLCanvasElement> document.getElementById("canvas1");
 
         this.view = new View(canvas);
+		var sheet = new SpriteSheet(new BitmapData("rockman.png"),500,350,10,7,500/10/2);
+		sheet.addAnimation("run",[3,4,5]);
+		sheet.addAnimation("stand",[0,1,2]);
+		sheet.addAnimation("attack1",[42,43,44,45]);
 		var c =100;
 		while(c-->0){
 			var ss = new Sprite();
-			var ssc=new SpriteSheetCtrl(ss,new BitmapData("rockman.png"),500,350,10,7,Math.random()/3);
+			if(Math.random()<.5)
+			ss.scaleX=-1;
+			var ssc=new SpriteSheetCtrl(ss,sheet,Math.random()/3);
+			ssc.play(sheet.animationNames[Math.floor(sheet.animationNames.length*Math.random())],Math.random()*100);
 			ssc.frame=100*Math.random();
 			ss.ctrls.push(ssc);
 			ss.x=Math.floor(Math.random()*400);
 			ss.y=Math.floor(Math.random()*400);
 			this.view.addChild(ss);
 		}
+		this.view.children.sort((n1,n2) => n1.y - n2.y);
 		
 		var s = new Sprite();
 		this.view.addChild(s);
