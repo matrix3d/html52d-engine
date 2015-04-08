@@ -89,6 +89,8 @@ class Graphics {
     update() {
 		this.lineing=false;
 		this.filling=false;
+		if(!this.filling)
+		Graphics.ctx.beginPath();
         for (var key in this.cmds) {
             this.cmds[key].update();
         }

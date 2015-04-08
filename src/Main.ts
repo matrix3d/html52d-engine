@@ -92,6 +92,7 @@ class Shape3D extends Sprite {
         super();
         this.id = id;
         this.graphics.beginFill(color);
+		this.graphics.lineStyle(0,0xff0000);
 		//this.graphics.beginBitmapFill(new BitmapData("1.jpg"));
         var j = Math.floor( 16 * Math.random()/2)*2;
         var r = 10;

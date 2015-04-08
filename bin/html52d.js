@@ -1,7 +1,7 @@
-﻿/**
-* ...
-* @author lizhi
-*/
+/**
+ * ...
+ * @author lizhi
+ */
 // module display{
 var BitmapData = (function () {
     function BitmapData(src) {
@@ -18,27 +18,30 @@ var __extends = this.__extends || function (d, b) {
     d.prototype = new __();
 };
 /**
-* ...
-* @author lizhi
-*/
+ * ...
+ * @author lizhi
+ */
 var Graphics = (function () {
     function Graphics() {
         this.cmds = [];
     }
     Graphics.prototype.drawImage = function (bitmap, sx, sy, swidth, sheight, x, y, width, height) {
-        if (typeof sx === "undefined") { sx = 0; }
-        if (typeof sy === "undefined") { sy = 0; }
-        if (typeof swidth === "undefined") { swidth = 0; }
-        if (typeof sheight === "undefined") { sheight = 0; }
-        if (typeof x === "undefined") { x = 0; }
-        if (typeof y === "undefined") { y = 0; }
-        if (typeof width === "undefined") { width = 0; }
-        if (typeof height === "undefined") { height = 0; }
-        this.cmds.push(swidth == 0 ? new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy]) : new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy, swidth, sheight, x, y, width, height]));
+        if (sx === void 0) { sx = 0; }
+        if (sy === void 0) { sy = 0; }
+        if (swidth === void 0) { swidth = 0; }
+        if (sheight === void 0) { sheight = 0; }
+        if (x === void 0) { x = 0; }
+        if (y === void 0) { y = 0; }
+        if (width === void 0) { width = 0; }
+        if (height === void 0) { height = 0; }
+        this.cmds.push(swidth == 0 ?
+            new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy])
+            :
+                new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy, swidth, sheight, x, y, width, height]));
     };
     Graphics.prototype.beginFill = function (color, alpha) {
-        if (typeof color === "undefined") { color = 0; }
-        if (typeof alpha === "undefined") { alpha = 1; }
+        if (color === void 0) { color = 0; }
+        if (alpha === void 0) { alpha = 1; }
         this.cmds.push(new SetColorAttribCmd(Graphics.ctx, "fillStyle", color, alpha, this.sprite), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true));
     };
     Graphics.prototype.endFill = function () {
@@ -48,13 +51,12 @@ var Graphics = (function () {
         }
     };
     Graphics.prototype.lineStyle = function (thickness, color, alpha) {
-        if (typeof color === "undefined") { color = 0; }
-        if (typeof alpha === "undefined") { alpha = 1; }
+        if (color === void 0) { color = 0; }
+        if (alpha === void 0) { alpha = 1; }
         if (this.lineing)
             this.cmds.push(new Cmd(Graphics.ctx.stroke, null));
         this.cmds.push(new SetAttribCmd(Graphics.ctx, "lineWidth", thickness), new SetColorAttribCmd(Graphics.ctx, "strokeStyle", color, alpha, this.sprite), new SetAttribCmd(this, "lineing", thickness != undefined));
     };
-
     //public function beginGradientFill(type: String, colors: Array, alphas: Array, ratios: Array, matrix: Matrix= null, spreadMethod: String= "pad", interpolationMethod: String= "rgb", focalPointRatio: Number= 0): void;
     Graphics.prototype.clear = function () {
         this.filling = false;
@@ -67,7 +69,6 @@ var Graphics = (function () {
     Graphics.prototype.drawCircle = function (x, y, radius) {
         this.cmds.push(new Cmd(Graphics.ctx.beginPath, null), new Cmd(Graphics.ctx.arc, [x, y, radius, 0, Math.PI * 2]), new Cmd(Graphics.ctx.closePath, null), new Cmd(Graphics.ctx.fill, null));
     };
-
     //public function drawEllipse(x: Number, y: Number, width: Number, height: Number): void;
     Graphics.prototype.drawRect = function (x, y, width, height) {
         if (this.filling)
@@ -75,26 +76,24 @@ var Graphics = (function () {
         if (this.lineing)
             this.cmds.push(new Cmd(Graphics.ctx.strokeRect, [x, y, width, height]));
     };
-
     //public function drawRoundRect(x: Number, y: Number, width: Number, height: Number, ellipseWidth: Number, ellipseHeight: Number= null): void;
     Graphics.prototype.lineTo = function (x, y) {
         this.cmds.push(new Cmd(Graphics.ctx.lineTo, [x, y]));
     };
-
     Graphics.prototype.moveTo = function (x, y) {
         this.cmds.push(new Cmd(Graphics.ctx.moveTo, [x, y]));
     };
-
     Graphics.prototype.curveTo = function (controlX, controlY, anchorX, anchorY) {
         this.cmds.push(new Cmd(Graphics.ctx.quadraticCurveTo, [controlX, controlY, anchorX, anchorY]));
     };
     Graphics.prototype.cubicCurveTo = function (controlX1, controlY1, controlX2, controlY2, anchorX, anchorY) {
         this.cmds.push(new Cmd(Graphics.ctx.bezierCurveTo, [controlX1, controlY1, controlX2, controlY2, anchorX, anchorY]));
     };
-
     Graphics.prototype.update = function () {
         this.lineing = false;
         this.filling = false;
+        if (!this.filling)
+            Graphics.ctx.beginPath();
         for (var key in this.cmds) {
             this.cmds[key].update();
         }
@@ -106,7 +105,6 @@ var Graphics = (function () {
     };
     return Graphics;
 })();
-
 var Cmd = (function () {
     function Cmd(cmd, args) {
         this.cmd = cmd;
@@ -117,7 +115,6 @@ var Cmd = (function () {
     };
     return Cmd;
 })();
-
 var SetAttribCmd = (function (_super) {
     __extends(SetAttribCmd, _super);
     function SetAttribCmd(target, name, value) {
@@ -132,7 +129,6 @@ var SetAttribCmd = (function (_super) {
     };
     return SetAttribCmd;
 })(Cmd);
-
 var SetColorAttribCmd = (function (_super) {
     __extends(SetColorAttribCmd, _super);
     function SetColorAttribCmd(target, name, color, alpha, sprite) {
@@ -148,9 +144,9 @@ var SetColorAttribCmd = (function (_super) {
     return SetColorAttribCmd;
 })(SetAttribCmd);
 /**
-* ...
-* @author lizhi
-*/
+ * ...
+ * @author lizhi
+ */
 var Sprite = (function () {
     function Sprite() {
         this.children = [];
@@ -168,19 +164,16 @@ var Sprite = (function () {
         s.parent = this;
         this.children.push(s);
     };
-
     Sprite.prototype.removeChild = function (s) {
         var i = this.children.indexOf(s);
         if (i != -1) {
             this.children.splice(i, 1);
         }
     };
-
     Sprite.prototype.update = function (v) {
         for (var key in this.ctrls) {
             this.ctrls[key].update();
         }
-
         v.ctx.setTransform(1, 0, 0, 1, 0, 0);
         v.ctx.translate(this.x, this.y);
         v.ctx.rotate(this.rotation * Math.PI / 180);
@@ -190,9 +183,9 @@ var Sprite = (function () {
     return Sprite;
 })();
 /**
-* ...
-* @author lizhi
-*/
+ * ...
+ * @author lizhi
+ */
 var View = (function (_super) {
     __extends(View, _super);
     function View(canvas) {
@@ -203,16 +196,13 @@ var View = (function (_super) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
         Graphics.ctx = this.ctx;
-        canvas.addEventListener("mousemove", function (e) {
-            return _this.mouseMoveHander(e);
-        });
+        canvas.addEventListener("mousemove", function (e) { return _this.mouseMoveHander(e); });
     }
     View.prototype.mouseMoveHander = function (e) {
         var rect = this.canvas.getBoundingClientRect();
         this.mouseX = e.clientX - rect.left;
         this.mouseY = e.clientY - rect.top;
     };
-
     View.prototype.render = function () {
         this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -224,9 +214,9 @@ var View = (function (_super) {
     return View;
 })(Sprite);
 /**
-* ...
-* @author lizhi
-*/
+ * ...
+ * @author lizhi
+ */
 var Ctrl = (function () {
     function Ctrl() {
     }
@@ -235,13 +225,13 @@ var Ctrl = (function () {
     return Ctrl;
 })();
 /**
-* ...
-* @author lizhi
-*/
+ * ...
+ * @author lizhi
+ */
 var SpriteSheet = (function () {
     function SpriteSheet(image, imageWidth, imageHeight, numCols, numRows, centerX, centerY) {
-        if (typeof centerX === "undefined") { centerX = 0; }
-        if (typeof centerY === "undefined") { centerY = 0; }
+        if (centerX === void 0) { centerX = 0; }
+        if (centerY === void 0) { centerY = 0; }
         this.animations = {};
         this.animationNames = [];
         this.image = image;
@@ -257,10 +247,10 @@ var SpriteSheet = (function () {
         var frames = this.animations[currentAnimationName];
         if (frames) {
             var f = frames[Math.floor(frame) % frames.length];
-        } else {
+        }
+        else {
             var f = Math.floor(frame) % (this.numCols * this.numRows);
         }
-
         var ox = f % this.numCols;
         var oy = Math.floor(f / this.numCols);
         var sw = this.imageWidth / this.numCols;
@@ -274,13 +264,13 @@ var SpriteSheet = (function () {
     return SpriteSheet;
 })();
 /**
-* ...
-* @author lizhi
-*/
+ * ...
+ * @author lizhi
+ */
 var SpriteSheetCtrl = (function (_super) {
     __extends(SpriteSheetCtrl, _super);
     function SpriteSheetCtrl(target, sheet, fps) {
-        if (typeof fps === "undefined") { fps = 1; }
+        if (fps === void 0) { fps = 1; }
         _super.call(this);
         this.frame = 0;
         this.target = target;
@@ -291,18 +281,17 @@ var SpriteSheetCtrl = (function (_super) {
         this.frame += this.fps;
         this.sheet.update(this.target, this.frame, this.currentAnimationName);
     };
-
     SpriteSheetCtrl.prototype.play = function (name, frame) {
-        if (typeof frame === "undefined") { frame = 0; }
+        if (frame === void 0) { frame = 0; }
         this.currentAnimationName = name;
         this.frame = frame;
     };
     return SpriteSheetCtrl;
 })(Ctrl);
 /**
-* ...
-* @author lizhi
-*/
+ * ...
+ * @author lizhi
+ */
 var Main = (function () {
     function Main() {
     }
@@ -312,13 +301,11 @@ var Main = (function () {
     };
     return Main;
 })();
-
 var App = (function () {
     function App() {
         var _this = this;
         this.shapes = [];
         var canvas = document.getElementById("canvas1");
-
         this.view = new View(canvas);
         var sheet = new SpriteSheet(new BitmapData("rockman.png"), 500, 350, 10, 7, 500 / 10 / 2);
         sheet.addAnimation("run", [3, 4, 5]);
@@ -337,23 +324,15 @@ var App = (function () {
             ss.y = Math.floor(Math.random() * 400);
             this.view.addChild(ss);
         }
-        this.view.children.sort(function (n1, n2) {
-            return n1.y - n2.y;
-        });
-
+        this.view.children.sort(function (n1, n2) { return n1.y - n2.y; });
         var s = new Sprite();
         this.view.addChild(s);
-        this.view.canvas.addEventListener("mousemove", function (e) {
-            return _this.mouseMoveHander(e);
-        });
+        this.view.canvas.addEventListener("mousemove", function (e) { return _this.mouseMoveHander(e); });
     }
     App.prototype.start = function () {
         var _this = this;
-        this.timerToken = setInterval(function () {
-            return _this.update();
-        }, 1000 / 24);
+        this.timerToken = setInterval(function () { return _this.update(); }, 1000 / 24);
     };
-
     App.prototype.mouseMoveHander = function (e) {
         var c = 3;
         while (c-- > 0) {
@@ -379,13 +358,11 @@ var App = (function () {
         }
         this.view.render();
     };
-
     App.prototype.stop = function () {
         clearTimeout(this.timerToken);
     };
     return App;
 })();
-
 var Shape3D = (function (_super) {
     __extends(Shape3D, _super);
     function Shape3D(id, color) {
@@ -394,7 +371,7 @@ var Shape3D = (function (_super) {
         this.rSpeed = Math.random() / 300;
         this.id = id;
         this.graphics.beginFill(color);
-
+        this.graphics.lineStyle(0, 0xff0000);
         //this.graphics.beginBitmapFill(new BitmapData("1.jpg"));
         var j = Math.floor(16 * Math.random() / 2) * 2;
         var r = 10;
@@ -415,13 +392,12 @@ var Shape3D = (function (_super) {
             if (i == 0) {
                 if (!isB)
                     this.graphics.moveTo(dx, dy);
-            } else {
+            }
+            else {
                 if (!isB)
                     this.graphics.lineTo(dx, dy);
-                // else vs.push(new Point(dx, dy));
             }
         }
-
         var speed = 10 * (.2 + Math.random());
         var a3 = 2 * Math.PI * Math.random();
         this.vx = Math.sin(a3) * speed;
