@@ -16,6 +16,13 @@ class Graphics {
 			new Cmd(Graphics.ctx.drawImage, [bitmap.image,sx,sy,swidth,sheight,x,y,width,height])
 		);
 	}
+	beginBitmapFill (bitmap:BitmapData, matrix:Matrix=null, repeat:Boolean=true, smooth:Boolean=false) : void{
+		this.cmds.push(
+			new SetBitmapAttribCmd(Graphics.ctx,"fillStyle", bitmap,repeat,this.sprite),
+			new Cmd(Graphics.ctx.beginPath, null),
+			new SetAttribCmd(this,"filling", true)
+		);
+	}
     beginFill(color: number=0,alpha:number=1) {
         this.cmds.push(
 			new SetColorAttribCmd(Graphics.ctx,"fillStyle", color,alpha,this.sprite),
@@ -129,9 +136,6 @@ class SetAttribCmd extends Cmd {
 }
 
 class SetColorAttribCmd extends SetAttribCmd {
-	target:any;
-    name: string;
-    value: any;
 	color:number;
 	alpha:number;
 	sprite:Sprite;
@@ -143,6 +147,22 @@ class SetColorAttribCmd extends SetAttribCmd {
     }
     update() {
         this.value="rgba("+(this.color>>16&0xff)+","+(this.color>>8&0xff)+","+(this.color&0xff)+","+this.alpha*this.sprite.alpha+")";
+		super.update();
+    }
+}
+
+class SetBitmapAttribCmd extends SetAttribCmd {
+	bmd:BitmapData;
+	sprite:Sprite;
+	repeat:Boolean;
+    constructor(target:any,name: string, bmd: BitmapData,repeat:Boolean,sprite:Sprite) {
+		this.bmd=bmd;
+		this.sprite=sprite;
+        this.repeat=repeat;
+		super(target,name,null);
+    }
+    update() {
+        this.value = this.target.createPattern(this.bmd.image,this.repeat? "repeat":"no-repeat");
 		super.update();
     }
 }

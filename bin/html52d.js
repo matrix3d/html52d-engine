@@ -2,6 +2,128 @@
  * ...
  * @author lizhi
  */
+var Matrix = (function () {
+    function Matrix(a, b, c, d, tx, ty) {
+        if (a === void 0) { a = 1; }
+        if (b === void 0) { b = 0; }
+        if (c === void 0) { c = 0; }
+        if (d === void 0) { d = 1; }
+        if (tx === void 0) { tx = 0; }
+        if (ty === void 0) { ty = 0; }
+        this.setValues(a, b, c, d, tx, ty);
+    }
+    Matrix.prototype.setValues = function (a, b, c, d, tx, ty) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        this.d = d;
+        this.tx = tx;
+        this.ty = ty;
+    };
+    Matrix.prototype.append = function (m) {
+        var a1 = this.a;
+        var b1 = this.b;
+        var c1 = this.c;
+        var d1 = this.d;
+        if (m.a != 1 || m.b != 0 || m.c != 0 || m.d != 1) {
+            this.a = a1 * m.a + c1 * m.b;
+            this.b = b1 * m.a + d1 * m.b;
+            this.c = a1 * m.c + c1 * m.d;
+            this.d = b1 * m.c + d1 * m.d;
+        }
+        this.tx = a1 * m.tx + c1 * m.ty + this.tx;
+        this.ty = b1 * m.tx + d1 * m.ty + this.ty;
+    };
+    Matrix.prototype.prepend = function (m) {
+        var a1 = this.a;
+        var c1 = this.c;
+        var tx1 = this.tx;
+        this.a = m.a * a1 + m.c * this.b;
+        this.b = m.b * a1 + m.d * this.b;
+        this.c = m.a * c1 + m.c * this.d;
+        this.d = m.b * c1 + m.d * this.d;
+        this.tx = m.a * tx1 + m.c * this.ty + m.tx;
+        this.ty = m.b * tx1 + m.d * this.ty + m.ty;
+    };
+    Matrix.prototype.rotate = function (angle) {
+        angle = angle * Matrix.DEG_TO_RAD;
+        var cos = Math.cos(angle);
+        var sin = Math.sin(angle);
+        var a1 = this.a;
+        var b1 = this.b;
+        this.a = a1 * cos + this.c * sin;
+        this.b = b1 * cos + this.d * sin;
+        this.c = -a1 * sin + this.c * cos;
+        this.d = -b1 * sin + this.d * cos;
+    };
+    Matrix.prototype.scale = function (x, y) {
+        this.a *= x;
+        this.b *= x;
+        this.c *= y;
+        this.d *= y;
+    };
+    Matrix.prototype.translate = function (x, y) {
+        this.tx += this.a * x + this.c * y;
+        this.ty += this.b * x + this.d * y;
+    };
+    Matrix.prototype.identity = function () {
+        this.a = this.d = 1;
+        this.b = this.c = this.tx = this.ty = 0;
+    };
+    Matrix.prototype.invert = function () {
+        var a1 = this.a;
+        var b1 = this.b;
+        var c1 = this.c;
+        var d1 = this.d;
+        var tx1 = this.tx;
+        var n = a1 * d1 - b1 * c1;
+        this.a = d1 / n;
+        this.b = -b1 / n;
+        this.c = -c1 / n;
+        this.d = a1 / n;
+        this.tx = (c1 * this.ty - d1 * tx1) / n;
+        this.ty = -(a1 * this.ty - b1 * tx1) / n;
+    };
+    Matrix.prototype.transformPoint = function (x, y, pt) {
+        pt = pt || {};
+        pt.x = x * this.a + y * this.c + this.tx;
+        pt.y = x * this.b + y * this.d + this.ty;
+        return pt;
+    };
+    Matrix.prototype.decompose = function (target) {
+        if (target == null) {
+            target = {};
+        }
+        target.x = this.tx;
+        target.y = this.ty;
+        target.scaleX = Math.sqrt(this.a * this.a + this.b * this.b);
+        target.scaleY = Math.sqrt(this.c * this.c + this.d * this.d);
+        var skewX = Math.atan2(-this.c, this.d);
+        var skewY = Math.atan2(this.b, this.a);
+        var delta = Math.abs(1 - skewX / skewY);
+        if (delta < 0.00001) {
+            target.rotation = skewY / Matrix.DEG_TO_RAD;
+            if (this.a < 0 && this.d >= 0) {
+                target.rotation += (target.rotation <= 0) ? 180 : -180;
+            }
+        }
+        else {
+        }
+        return target;
+    };
+    Matrix.prototype.copy = function (matrix) {
+        return this.setValues(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
+    };
+    Matrix.prototype.clone = function () {
+        return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
+    };
+    Matrix.DEG_TO_RAD = Math.PI / 180;
+    return Matrix;
+})();
+/**
+ * ...
+ * @author lizhi
+ */
 // module display{
 var BitmapData = (function () {
     function BitmapData(src) {
@@ -34,10 +156,13 @@ var Graphics = (function () {
         if (y === void 0) { y = 0; }
         if (width === void 0) { width = 0; }
         if (height === void 0) { height = 0; }
-        this.cmds.push(swidth == 0 ?
-            new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy])
-            :
-                new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy, swidth, sheight, x, y, width, height]));
+        this.cmds.push(swidth == 0 ? new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy]) : new Cmd(Graphics.ctx.drawImage, [bitmap.image, sx, sy, swidth, sheight, x, y, width, height]));
+    };
+    Graphics.prototype.beginBitmapFill = function (bitmap, matrix, repeat, smooth) {
+        if (matrix === void 0) { matrix = null; }
+        if (repeat === void 0) { repeat = true; }
+        if (smooth === void 0) { smooth = false; }
+        this.cmds.push(new SetBitmapAttribCmd(Graphics.ctx, "fillStyle", bitmap, repeat, this.sprite), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true));
     };
     Graphics.prototype.beginFill = function (color, alpha) {
         if (color === void 0) { color = 0; }
@@ -142,6 +267,20 @@ var SetColorAttribCmd = (function (_super) {
         _super.prototype.update.call(this);
     };
     return SetColorAttribCmd;
+})(SetAttribCmd);
+var SetBitmapAttribCmd = (function (_super) {
+    __extends(SetBitmapAttribCmd, _super);
+    function SetBitmapAttribCmd(target, name, bmd, repeat, sprite) {
+        this.bmd = bmd;
+        this.sprite = sprite;
+        this.repeat = repeat;
+        _super.call(this, target, name, null);
+    }
+    SetBitmapAttribCmd.prototype.update = function () {
+        this.value = this.target.createPattern(this.bmd.image, this.repeat ? "repeat" : "no-repeat");
+        _super.prototype.update.call(this);
+    };
+    return SetBitmapAttribCmd;
 })(SetAttribCmd);
 /**
  * ...
@@ -307,7 +446,8 @@ var App = (function () {
         this.shapes = [];
         var canvas = document.getElementById("canvas1");
         this.view = new View(canvas);
-        var sheet = new SpriteSheet(new BitmapData("rockman.png"), 500, 350, 10, 7, 500 / 10 / 2);
+        var bmd = new BitmapData("rockman.png");
+        var sheet = new SpriteSheet(bmd, 500, 350, 10, 7, 500 / 10 / 2);
         sheet.addAnimation("run", [3, 4, 5]);
         sheet.addAnimation("stand", [0, 1, 2]);
         sheet.addAnimation("attack1", [42, 43, 44, 45]);
@@ -328,6 +468,14 @@ var App = (function () {
         var s = new Sprite();
         this.view.addChild(s);
         this.view.canvas.addEventListener("mousemove", function (e) { return _this.mouseMoveHander(e); });
+        var ss = new Sprite();
+        this.view.addChild(ss);
+        ss.graphics.beginBitmapFill(bmd);
+        ss.graphics.moveTo(0, 0);
+        ss.graphics.lineTo(100, 100);
+        ss.graphics.lineTo(100, 0);
+        ss.graphics.lineTo(0, 0);
+        ss.x = 100;
     }
     App.prototype.start = function () {
         var _this = this;

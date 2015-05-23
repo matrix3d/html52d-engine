@@ -8,7 +8,7 @@
     <movie fps="0" />
     <movie width="0" />
     <movie height="0" />
-    <movie version="1" />
+    <movie version="0" />
     <movie minorVersion="0" />
     <movie platform="Default" />
     <movie background="#000000" />
@@ -26,7 +26,7 @@
     <hidden path="obj" />
   </hiddenPaths>
   <!-- Executed before build -->
-  <preBuildCommand>"%APPDATA%\npm\tsc.cmd" --out "bin/html52d.js"  "src/BitmapData.ts" "src/Graphics.ts" "src/Sprite.ts" "src/View.ts" "src/Ctrl.ts" "src/SpriteSheet.ts" "src/SpriteSheetCtrl.ts" "src/Main.ts"</preBuildCommand>
+  <preBuildCommand>"%APPDATA%\npm\tsc.cmd" --out "bin/html52d.js" "src/Matrix.ts"  "src/BitmapData.ts" "src/Graphics.ts" "src/Sprite.ts" "src/View.ts" "src/Ctrl.ts" "src/SpriteSheet.ts" "src/SpriteSheetCtrl.ts" "src/Main.ts"</preBuildCommand>
   <!-- Executed after build -->
   <postBuildCommand alwaysRun="False" />
   <!-- Other project options -->

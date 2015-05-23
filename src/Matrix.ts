@@ -4,8 +4,14 @@
  */
 
 class Matrix{
-	public static var DEG_TO_RAD:number=Math.PI/180;
-	constructor Matrix(a:number=1, b:number=0, c:number=0, d:number=1, tx:number=0, ty:number=0):void {
+	static DEG_TO_RAD:number=Math.PI/180;
+	a:number;
+	b:number;
+	c:number;
+	d:number;
+	tx:number;
+	ty:number;
+	constructor(a:number=1, b:number=0, c:number=0, d:number=1, tx:number=0, ty:number=0) {
 		this.setValues(a,b,c,d,tx,ty);
 	}
 	setValues(a:number, b:number, c:number, d:number, tx:number, ty:number):void {
@@ -45,7 +51,7 @@ class Matrix{
 		this.ty = m.b*tx1+m.d*this.ty+m.ty;
 	}
 	rotate(angle:number):void {
-		angle = angle*Matrix2D.DEG_TO_RAD;
+		angle = angle*Matrix.DEG_TO_RAD;
 		var cos = Math.cos(angle);
 		var sin = Math.sin(angle);
 
@@ -107,7 +113,7 @@ class Matrix{
 
 		var delta = Math.abs(1-skewX/skewY);
 		if (delta < 0.00001) {
-			target.rotation = skewY/Matrix2D.DEG_TO_RAD;
+			target.rotation = skewY/Matrix.DEG_TO_RAD;
 			if (this.a < 0 && this.d >= 0) {
 				target.rotation += (target.rotation <= 0) ? 180 : -180;
 			}
@@ -123,6 +129,6 @@ class Matrix{
 		return this.setValues(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
 	}
 	clone() {
-		return new Matrix2D(this.a, this.b, this.c, this.d, this.tx, this.ty);
+		return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
 	}
 }

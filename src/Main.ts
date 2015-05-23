@@ -19,9 +19,10 @@ class App {
     shapes: Array<Shape3D> = [];
     constructor() {
         var canvas =<HTMLCanvasElement> document.getElementById("canvas1");
-
+		
         this.view = new View(canvas);
-		var sheet = new SpriteSheet(new BitmapData("rockman.png"),500,350,10,7,500/10/2);
+		var bmd:BitmapData=new BitmapData("rockman.png");
+		var sheet = new SpriteSheet(bmd,500,350,10,7,500/10/2);
 		sheet.addAnimation("run",[3,4,5]);
 		sheet.addAnimation("stand",[0,1,2]);
 		sheet.addAnimation("attack1",[42,43,44,45]);
@@ -43,6 +44,15 @@ class App {
 		var s = new Sprite();
 		this.view.addChild(s);
 		this.view.canvas.addEventListener("mousemove", (e:MouseEvent) => this.mouseMoveHander(e));
+		
+		var ss= new Sprite();
+		this.view.addChild(ss);
+		ss.graphics.beginBitmapFill(bmd);
+		ss.graphics.moveTo(0,0);
+		ss.graphics.lineTo(100,100);
+		ss.graphics.lineTo(100,0);
+		ss.graphics.lineTo(0,0);
+		ss.x=100;
     }
 
     start() {
