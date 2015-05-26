@@ -7,13 +7,48 @@ class Main
 	
 	static main():void 
 	{
-		var app = new App();
+		var app = new App2();
 		app.start();
 		
 	}
 }
 
-class App {
+class App2{
+	view:View;
+	timerToken: number;
+	s:Sprite;
+	constructor() {
+		var canvas =<HTMLCanvasElement> document.getElementById("canvas1");
+        this.view = new View(canvas);
+		
+		this.s=new Sprite();
+		this.s.graphics.lineStyle(0);
+		this.s.graphics.drawRect(-50,-50,100,100);
+		this.view.addChild(this.s);
+		this.s.x=150;
+		this.s.y=150;
+		
+		var s2:Sprite=new Sprite();
+		s2.x=50;
+		s2.y=50;
+		s2.graphics.lineStyle(0,0xff0000);
+		var bmd:BitmapData=new BitmapData("rockman.png");
+		s2.scaleX=2;
+		s2.graphics.beginBitmapFill(bmd);
+		s2.graphics.drawRect(-50,-50,100,100);
+		this.s.addChild(s2);
+	}
+	 start() {
+        this.timerToken = setInterval(() => this.update(), 1000/60);
+    }
+	
+    update() {
+		this.s.rotation+=1;
+        this.view.render();
+    }
+}
+
+class App1 {
     view: View;
     timerToken: number;
     shapes: Array<Shape3D> = [];
@@ -56,7 +91,7 @@ class App {
     }
 
     start() {
-        this.timerToken = setInterval(() => this.update(), 1000/24);
+        this.timerToken = setInterval(() => this.update(), 1000/60);
     }
 
 	mouseMoveHander(e){

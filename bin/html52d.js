@@ -298,6 +298,8 @@ var Sprite = (function () {
         this.scaleY = 1;
         this.rotation = 0;
         this.graphics.sprite = this;
+        this.matrix = new Matrix();
+        this.worldMatrix = new Matrix();
     }
     Sprite.prototype.addChild = function (s) {
         s.parent = this;
@@ -313,11 +315,20 @@ var Sprite = (function () {
         for (var key in this.ctrls) {
             this.ctrls[key].update();
         }
-        v.ctx.setTransform(1, 0, 0, 1, 0, 0);
-        v.ctx.translate(this.x, this.y);
-        v.ctx.rotate(this.rotation * Math.PI / 180);
-        v.ctx.scale(this.scaleX, this.scaleY);
+        this.matrix.identity();
+        this.matrix.translate(this.x, this.y);
+        this.matrix.rotate(this.rotation);
+        this.matrix.scale(this.scaleX, this.scaleY);
+        this.worldMatrix.copy(this.matrix);
+        if (this.parent) {
+            this.worldMatrix.prepend(this.parent.worldMatrix);
+        }
+        v.ctx.setTransform(this.worldMatrix.a, this.worldMatrix.b, this.worldMatrix.c, this.worldMatrix.d, this.worldMatrix.tx, this.worldMatrix.ty);
         this.graphics.update();
+        for (var key in this.children) {
+            var s = this.children[key];
+            s.update(v);
+        }
     };
     return Sprite;
 })();
@@ -345,10 +356,7 @@ var View = (function (_super) {
     View.prototype.render = function () {
         this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        for (var key in this.children) {
-            var s = this.children[key];
-            s.update(this);
-        }
+        this.update(this);
     };
     return View;
 })(Sprite);
@@ -435,13 +443,43 @@ var Main = (function () {
     function Main() {
     }
     Main.main = function () {
-        var app = new App();
+        var app = new App2();
         app.start();
     };
     return Main;
 })();
-var App = (function () {
-    function App() {
+var App2 = (function () {
+    function App2() {
+        var canvas = document.getElementById("canvas1");
+        this.view = new View(canvas);
+        this.s = new Sprite();
+        this.s.graphics.lineStyle(0);
+        this.s.graphics.drawRect(-50, -50, 100, 100);
+        this.view.addChild(this.s);
+        this.s.x = 150;
+        this.s.y = 150;
+        var s2 = new Sprite();
+        s2.x = 50;
+        s2.y = 50;
+        s2.graphics.lineStyle(0, 0xff0000);
+        var bmd = new BitmapData("rockman.png");
+        s2.scaleX = 2;
+        s2.graphics.beginBitmapFill(bmd);
+        s2.graphics.drawRect(-50, -50, 100, 100);
+        this.s.addChild(s2);
+    }
+    App2.prototype.start = function () {
+        var _this = this;
+        this.timerToken = setInterval(function () { return _this.update(); }, 1000 / 60);
+    };
+    App2.prototype.update = function () {
+        this.s.rotation += 1;
+        this.view.render();
+    };
+    return App2;
+})();
+var App1 = (function () {
+    function App1() {
         var _this = this;
         this.shapes = [];
         var canvas = document.getElementById("canvas1");
@@ -477,11 +515,11 @@ var App = (function () {
         ss.graphics.lineTo(0, 0);
         ss.x = 100;
     }
-    App.prototype.start = function () {
+    App1.prototype.start = function () {
         var _this = this;
-        this.timerToken = setInterval(function () { return _this.update(); }, 1000 / 24);
+        this.timerToken = setInterval(function () { return _this.update(); }, 1000 / 60);
     };
-    App.prototype.mouseMoveHander = function (e) {
+    App1.prototype.mouseMoveHander = function (e) {
         var c = 3;
         while (c-- > 0) {
             var s = new Shape3D(Math.random() * 1000, 0x000);
@@ -491,7 +529,7 @@ var App = (function () {
             this.shapes.push(s);
         }
     };
-    App.prototype.update = function () {
+    App1.prototype.update = function () {
         var d = new Date();
         var t = d.getTime();
         for (var i = this.shapes.length - 1; i >= 0; i--) {
@@ -506,10 +544,10 @@ var App = (function () {
         }
         this.view.render();
     };
-    App.prototype.stop = function () {
+    App1.prototype.stop = function () {
         clearTimeout(this.timerToken);
     };
-    return App;
+    return App1;
 })();
 var Shape3D = (function (_super) {
     __extends(Shape3D, _super);

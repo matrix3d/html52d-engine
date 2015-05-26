@@ -12,9 +12,13 @@ class Sprite {
     scaleX: number=1;
     scaleY: number=1;
     rotation: number = 0;
+	matrix:Matrix;
+	worldMatrix:Matrix;
     parent: Sprite;
     constructor() {
 		this.graphics.sprite=this;
+		this.matrix=new Matrix();
+		this.worldMatrix=new Matrix();
     }
 
     addChild(s: Sprite) {
@@ -33,11 +37,20 @@ class Sprite {
 		for(var key in this.ctrls){
 			this.ctrls[key].update();
 		}
-		
-        v.ctx.setTransform(1, 0, 0, 1, 0, 0);
-        v.ctx.translate(this.x, this.y);
-        v.ctx.rotate(this.rotation*Math.PI/180);
-        v.ctx.scale(this.scaleX, this.scaleY);
+		this.matrix.identity();
+		this.matrix.translate(this.x,this.y);
+		this.matrix.rotate(this.rotation);
+		this.matrix.scale(this.scaleX,this.scaleY);
+		this.worldMatrix.copy(this.matrix);
+		if(this.parent){
+			this.worldMatrix.prepend(this.parent.worldMatrix);
+		}
+        v.ctx.setTransform(this.worldMatrix.a, this.worldMatrix.b, this.worldMatrix.c, this.worldMatrix.d, this.worldMatrix.tx, this.worldMatrix.ty);
         this.graphics.update();
+		
+		for (var key in this.children) {
+            var s = this.children[key];
+            s.update(v);
+        }
     }
 } 

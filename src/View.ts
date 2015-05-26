@@ -24,9 +24,6 @@ class View extends Sprite{
     render() {
         this.ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        for (var key in this.children) {
-            var s = this.children[key];
-            s.update(this);
-        }
+        this.update(this);
     }
 } 
