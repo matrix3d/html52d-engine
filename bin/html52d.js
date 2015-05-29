@@ -162,12 +162,13 @@ var Graphics = (function () {
         if (matrix === void 0) { matrix = null; }
         if (repeat === void 0) { repeat = true; }
         if (smooth === void 0) { smooth = false; }
-        this.cmds.push(new SetBitmapAttribCmd(Graphics.ctx, "fillStyle", bitmap, repeat, this.sprite), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true));
+        var cmd = new SetBitmapAttribCmd(Graphics.ctx, "fillStyle", bitmap, matrix, repeat, this.sprite);
+        this.cmds.push(cmd, new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true), new SetAttribCmd(this, "fillingBmdCmd", cmd));
     };
     Graphics.prototype.beginFill = function (color, alpha) {
         if (color === void 0) { color = 0; }
         if (alpha === void 0) { alpha = 1; }
-        this.cmds.push(new SetColorAttribCmd(Graphics.ctx, "fillStyle", color, alpha, this.sprite), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true));
+        this.cmds.push(new SetColorAttribCmd(Graphics.ctx, "fillStyle", color, alpha, this.sprite), new Cmd(Graphics.ctx.beginPath, null), new SetAttribCmd(this, "filling", true), new SetAttribCmd(this, "fillingBmdCmd", null));
     };
     Graphics.prototype.endFill = function () {
         this.cmds.push(new Cmd(Graphics.ctx.closePath, null), new SetAttribCmd(this, "filling", false));
@@ -223,8 +224,20 @@ var Graphics = (function () {
             this.cmds[key].update();
         }
         Graphics.ctx.closePath();
-        if (this.filling)
-            Graphics.ctx.fill();
+        if (this.filling) {
+            if (this.fillingBmdCmd != null && this.fillingBmdCmd.matrix != null) {
+                var m = this.fillingBmdCmd.worldMatrix;
+                m.copy(this.fillingBmdCmd.sprite.worldMatrix);
+                m.append(this.fillingBmdCmd.matrix);
+                Graphics.ctx.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+                Graphics.ctx.fill();
+                m = this.fillingBmdCmd.sprite.worldMatrix;
+                Graphics.ctx.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
+            }
+            else {
+                Graphics.ctx.fill();
+            }
+        }
         if (this.lineing)
             Graphics.ctx.stroke();
     };
@@ -270,9 +283,11 @@ var SetColorAttribCmd = (function (_super) {
 })(SetAttribCmd);
 var SetBitmapAttribCmd = (function (_super) {
     __extends(SetBitmapAttribCmd, _super);
-    function SetBitmapAttribCmd(target, name, bmd, repeat, sprite) {
+    function SetBitmapAttribCmd(target, name, bmd, matrix, repeat, sprite) {
         this.bmd = bmd;
         this.sprite = sprite;
+        this.matrix = matrix;
+        this.worldMatrix = new Matrix();
         this.repeat = repeat;
         _super.call(this, target, name, null);
     }
@@ -450,6 +465,7 @@ var Main = (function () {
 })();
 var App2 = (function () {
     function App2() {
+        this.m = new Matrix();
         var canvas = document.getElementById("canvas1");
         this.view = new View(canvas);
         this.s = new Sprite();
@@ -464,8 +480,13 @@ var App2 = (function () {
         s2.graphics.lineStyle(0, 0xff0000);
         var bmd = new BitmapData("rockman.png");
         s2.scaleX = 2;
-        s2.graphics.beginBitmapFill(bmd);
-        s2.graphics.drawRect(-50, -50, 100, 100);
+        s2.graphics.beginBitmapFill(bmd, this.m);
+        s2.graphics.moveTo(0, 0);
+        s2.graphics.lineTo(100, 0);
+        s2.graphics.lineTo(100, 100);
+        s2.graphics.lineTo(0, 100);
+        s2.graphics.lineTo(0, 0);
+        //s2.graphics.drawRect(-50,-50,100,100);
         this.s.addChild(s2);
     }
     App2.prototype.start = function () {
@@ -473,6 +494,7 @@ var App2 = (function () {
         this.timerToken = setInterval(function () { return _this.update(); }, 1000 / 60);
     };
     App2.prototype.update = function () {
+        this.m.rotate(1);
         this.s.rotation += 1;
         this.view.render();
     };

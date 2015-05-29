@@ -5,6 +5,7 @@
 class Graphics {
     static ctx: CanvasRenderingContext2D;
 	filling:boolean;
+	fillingBmdCmd:SetBitmapAttribCmd;
 	lineing:boolean;
     cmds: Array<Cmd> = [];
 	sprite:Sprite;
@@ -17,17 +18,20 @@ class Graphics {
 		);
 	}
 	beginBitmapFill (bitmap:BitmapData, matrix:Matrix=null, repeat:Boolean=true, smooth:Boolean=false) : void{
+		var cmd=new SetBitmapAttribCmd(Graphics.ctx,"fillStyle", bitmap,matrix,repeat,this.sprite);
 		this.cmds.push(
-			new SetBitmapAttribCmd(Graphics.ctx,"fillStyle", bitmap,repeat,this.sprite),
+			cmd,
 			new Cmd(Graphics.ctx.beginPath, null),
-			new SetAttribCmd(this,"filling", true)
+			new SetAttribCmd(this,"filling", true),
+			new SetAttribCmd(this,"fillingBmdCmd", cmd)
 		);
 	}
     beginFill(color: number=0,alpha:number=1) {
         this.cmds.push(
 			new SetColorAttribCmd(Graphics.ctx,"fillStyle", color,alpha,this.sprite),
 			new Cmd(Graphics.ctx.beginPath, null),
-			new SetAttribCmd(this,"filling", true)
+			new SetAttribCmd(this,"filling", true),
+			new SetAttribCmd(this,"fillingBmdCmd", null)
 		);
     }
     endFill(): void {
@@ -102,7 +106,19 @@ class Graphics {
             this.cmds[key].update();
         }
 		Graphics.ctx.closePath();
-        if(this.filling)Graphics.ctx.fill();
+        if(this.filling){
+			if(this.fillingBmdCmd!=null&&this.fillingBmdCmd.matrix!=null){
+				var m=this.fillingBmdCmd.worldMatrix;
+				m.copy(this.fillingBmdCmd.sprite.worldMatrix);
+				m.append(this.fillingBmdCmd.matrix);
+				Graphics.ctx.setTransform(m.a,m.b,m.c,m.d,m.tx,m.ty);
+				Graphics.ctx.fill();
+				m=this.fillingBmdCmd.sprite.worldMatrix;
+				Graphics.ctx.setTransform(m.a,m.b,m.c,m.d,m.tx,m.ty);
+			}else{
+				Graphics.ctx.fill();
+			}
+		}
         if(this.lineing)Graphics.ctx.stroke();
     }
 } 
@@ -154,10 +170,14 @@ class SetColorAttribCmd extends SetAttribCmd {
 class SetBitmapAttribCmd extends SetAttribCmd {
 	bmd:BitmapData;
 	sprite:Sprite;
+	worldMatrix:Matrix;
+	matrix:Matrix;
 	repeat:Boolean;
-    constructor(target:any,name: string, bmd: BitmapData,repeat:Boolean,sprite:Sprite) {
+    constructor(target:any,name: string, bmd: BitmapData,matrix,repeat:Boolean,sprite:Sprite) {
 		this.bmd=bmd;
 		this.sprite=sprite;
+		this.matrix=matrix;
+		this.worldMatrix=new Matrix();
         this.repeat=repeat;
 		super(target,name,null);
     }

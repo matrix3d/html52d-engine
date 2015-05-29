@@ -17,6 +17,7 @@ class App2{
 	view:View;
 	timerToken: number;
 	s:Sprite;
+	m:Matrix=new Matrix();
 	constructor() {
 		var canvas =<HTMLCanvasElement> document.getElementById("canvas1");
         this.view = new View(canvas);
@@ -34,8 +35,14 @@ class App2{
 		s2.graphics.lineStyle(0,0xff0000);
 		var bmd:BitmapData=new BitmapData("rockman.png");
 		s2.scaleX=2;
-		s2.graphics.beginBitmapFill(bmd);
-		s2.graphics.drawRect(-50,-50,100,100);
+		s2.graphics.beginBitmapFill(bmd,this.m);
+		
+		s2.graphics.moveTo(0,0);
+		s2.graphics.lineTo(100,0);
+		s2.graphics.lineTo(100,100);
+		s2.graphics.lineTo(0,100);
+		s2.graphics.lineTo(0,0);
+		//s2.graphics.drawRect(-50,-50,100,100);
 		this.s.addChild(s2);
 	}
 	 start() {
@@ -43,6 +50,7 @@ class App2{
     }
 	
     update() {
+		this.m.rotate(1);
 		this.s.rotation+=1;
         this.view.render();
     }
